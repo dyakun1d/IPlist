@@ -4,21 +4,21 @@ from math import ceil
 from excel_report import create_excel
 
 # Интерфейс Streamlit
-st.title("creating Exel report")
+st.title("Создание Excel отчета о проекте")
 
 # Интерфейс для ввода данных
-author = st.text_input("Autor")
-creation_date = st.date_input("Date")
-project_name = st.text_input("Project name")
-power_wp = st.number_input("write the power of the station (MWp)", min_value=1)
+author = st.text_input("Имя автора")
+creation_date = st.date_input("Дата создания")
+project_name = st.text_input("Имя проекта")
+power_wp = st.number_input("Введите мощность станции (Wp)", min_value=1)
 
 # Ввод количества каждого устройства
-inverter_type = st.selectbox("inverter type", ["KACO", "Sungrow", "Huawei"])
-inverter_count = st.number_input("how many inverters do we have ?", min_value=0)
-logger_count = st.number_input("how many loggers do we have?", min_value=0) if inverter_type != "KACO" else 0
-trafo_station_count = st.number_input("how many trafostation do we have ?", min_value=0)
-scb_count = st.number_input("how many SCBs do we have?", min_value=0)
-ncu_count = st.number_input("how many NCU do we have?", min_value=0)
+inverter_type = st.selectbox("Тип инверторов", ["KACO", "Sungrow", "Huawei"])
+inverter_count = st.number_input("Сколько планируется инвертеров", min_value=0)
+logger_count = st.number_input("Сколько планируется логгеров", min_value=0) if inverter_type != "KACO" else 0
+trafo_station_count = st.number_input("Сколько планируется трафо станций", min_value=0)
+scb_count = st.number_input("Сколько планируется SCBs", min_value=0)
+ncu_count = st.number_input("Сколько планируется NCU", min_value=0)
 
 # Логика для подключения инверторов и SCBs
 connection_type_inverter = "Modbus" if inverter_type != "KACO" else "TCP/IP"
@@ -55,7 +55,7 @@ for ip in ip_iterator:
         break
 
 # Проверка и создание отчетов при нажатии кнопки
-if st.button("make a report"):
+if st.button("Создать отчет"):
     # Собрать данные для отчета
     author_data = {
         'author': author,
@@ -65,11 +65,11 @@ if st.button("make a report"):
     }
 
     # Подготовка данных для таблицы
-    headers = ['Device', 'type of connection', '№', 'IPs', 'subnet mask', 'Gateway', 'Modbus adr.', 'Type', 'Cable Type']
+    headers = ['Устройство', 'Тип подключения', '№', 'IP-адрес', 'Маска подсети', 'Gateway', 'Modbus adr.', 'Тип/Марка', 'Cable Type']
     
     # Добавляем столбец "Параметры подключения" для инверторов, если они не KACO
     if inverter_type != "KACO":
-        headers.append('Device')
+        headers.append('Параметры подключения')
     
     main_table_data = [headers]
 
@@ -80,8 +80,8 @@ if st.button("make a report"):
 
     # Генерация данных для таблицы
     for device_name, count, connection_type in [
-        ('Loggers', logger_count, 'TCP/IP'),
-        ('Trafostation', trafo_station_count, 'TCP/IP'),
+        ('Логгеры', logger_count, 'TCP/IP'),
+        ('Трафо станции', trafo_station_count, 'TCP/IP'),
         ('SCBs', scb_count, 'Modbus'),  # SCBs всегда Modbus
         ('NCU', ncu_count, 'TCP/IP'),
         ('Main cabinet', 1, 'TCP/IP'),  # Добавляем Main cabinet
@@ -91,7 +91,7 @@ if st.button("make a report"):
     ]:
         if count > 0:
             for i in range(count):
-                if device_name == 'Trafostation':
+                if device_name == 'Трафо станции':
                     # Для трафостанций с IP-адресом тип подключения TCP/IP
                     if power_wp > 20:
                         ip_address = str(start_ip + i * 256)
@@ -106,7 +106,7 @@ if st.button("make a report"):
                     # Добавляем соответствующий шкаф мониторинга
                     for j in range(6):  # Выделяем 6 IP-адресов для каждого шкафа мониторинга
                         ip_monitor = f"{ip_address.split('.')[0]}.{ip_address.split('.')[1]}.{third_octet}.{int(ip_address.split('.')[3]) + j + 1}"
-                        device_name_monitor = 'Monitoring cabinet'
+                        device_name_monitor = 'Шкаф мониторинга'
                         main_table_data.append([device_name_monitor, connection_type, f"{device_id}-{j+1}", ip_monitor, subnet_mask, gateway, '', '', ''])
 
                 elif device_name == 'SCBs':
